@@ -10,7 +10,7 @@ import SwiftUI
 
 
 struct ContentView: View {
-    var allMachines = AllMachines()
+    @EnvironmentObject var allMachines: AllMachines
     @StateObject var viewRouter = ViewRouter()
     var body: some View {
         VStack(spacing: 0){
@@ -23,6 +23,8 @@ struct ContentView: View {
                 }
 
             switch viewRouter.currentPage {
+            case .noPodman:
+                MissingPodmanView()
             case .land:
                 BodyView()
                     .environmentObject(viewRouter)
@@ -43,7 +45,7 @@ struct ContentView: View {
             Spacer()
         }
         .ignoresSafeArea()
-        .frame(minWidth: 800, maxWidth: .infinity, minHeight: 500,  maxHeight: .infinity)
+        .frame(minWidth: 800, maxWidth: .infinity, minHeight: 550,  maxHeight: .infinity)
     }
 }
 

@@ -48,6 +48,8 @@ class AllMachines: ObservableObject{
     @Published var running: Bool
     @Published var runningString: String
     @Published var noMachines: Bool
+    @Published var error: Error?
+    @Published var warning: String?
     // TODO: check if warn if active machine is not default connection
     // TODO: check if no machines exist
     
@@ -64,6 +66,8 @@ class AllMachines: ObservableObject{
         running = false
         runningString = "not running"
         noMachines = false
+        error = nil
+        warning = nil
     }
     
     private static func listMachinesFromPodman() throws -> [Machine]  {
@@ -82,7 +86,8 @@ class AllMachines: ObservableObject{
         }
         self.lst=jsons
     }
-    func getRunning() -> Machine?{
+    
+    private func getRunning() -> Machine?{
         for mach in self.lst{
             if mach.running{
                 return mach
@@ -135,8 +140,8 @@ class AllMachines: ObservableObject{
             }
             // If a machine is running, it is ALWAYS the active machine
             let runningMachine = getRunning()
-            if runningMachine != nil{
-                setActiveMachine(machine: runningMachine!)
+            if let m = runningMachine {
+                setActiveMachine(machine: m)
                 return
             }
 
@@ -185,12 +190,14 @@ class AllMachines: ObservableObject{
     func startActive() async throws -> Int32{
         reloadAll()
         let output = try shell(arguments: ["podman","machine", "start", activeMachine!.name])
+        reloadAll()
         return output.0
     }
     
     func stopActive() async throws -> Int32{
         reloadAll()
         let output = try shell(arguments: ["podman","machine", "stop", activeMachine!.name])
+        reloadAll()
         return output.0
     }
 
@@ -201,22 +208,61 @@ class NewMachineInit: ObservableObject {
     @Published var name: String
     @Published var ignitionPath: String
     @Published var imagePath: String
+    @Published var fcosStream: String
+    @Published var defaultIgn: Bool
+    @Published var useFcos: Bool
     @Published var cpus: Int
     @Published var memory: Int
     @Published var disksize: Int
+    
+    @Published var nameErr: Bool
+    @Published var ignitionErr: Bool
+    @Published var imageErr: Bool
 
 
     init(){
         self.name = "new_machine"
+        
+        self.useFcos = true
+        self.fcosStream = "next"
+        self.imagePath=""
+        
+        self.defaultIgn = true
         self.ignitionPath=""
-        self.imagePath="next"
+        
         self.cpus=1
         self.memory=2040
         self.disksize=10
-    }
-    func validate(){
-        //TODO: validate
+        
+        self.nameErr=false
+        self.ignitionErr = false
+        self.imageErr = false
+        
 
+        
+    }
+    func validate(existing: [Machine]) -> Bool {
+        var passValidate = true
+        if existing.contains(where: { $0.name == self.name }) {
+            self.nameErr = true
+            passValidate=false
+        }
+        let fileManager = FileManager.default
+        
+        // custom ign chosen but does not exist
+        if !defaultIgn && !fileManager.fileExists(atPath: ignitionPath) {
+            self.ignitionErr = true
+            passValidate=false
+        }
+        
+        // custom image chosen but doesn't exist
+        if !useFcos && !fileManager.fileExists(atPath: imagePath) {
+            self.imageErr = true
+            passValidate=false
+        }
+        return passValidate
+        
+        
     }
     func create() throws {
         do {

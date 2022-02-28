@@ -11,7 +11,8 @@ import Foundation
 enum MachineStartError: Error {
     case machineNotExist
     case alreadyRunning
-    case genericError
+    case genericError(reason: String)
+    
 }
 
 
@@ -22,11 +23,12 @@ enum MachineInitError: Error {
     case invalidDisk
     case invalidMemory
     case machineExists
-    case genericError
+    case genericError(reason: String)
 }
 
 enum MachineStop: Error {
-    case genericError
+    case genericError(reason: String)
+    
 }
 
 func parseMachineStart(message: String) -> Error{
@@ -36,13 +38,13 @@ func parseMachineStart(message: String) -> Error{
     case let str where str.contains("VM already running"):
         return MachineStartError.alreadyRunning
     default:
-        return MachineStartError.genericError
+        return MachineStartError.genericError(reason: message)
     }
 }
 
 func parseMachineInitError(message: String) -> Error{
     switch message {
-    case let str where str.contains("VM already existst"):
+    case let str where str.contains("VM already exists"):
         return MachineInitError.machineExists
     case let str where str.contains("cpus"):
         return MachineInitError.invalidCPUs
@@ -55,6 +57,7 @@ func parseMachineInitError(message: String) -> Error{
     case let str where str.contains("memory"):
         return MachineInitError.invalidMemory
     default:
-        return MachineStartError.genericError
+        return MachineStartError.genericError(reason: message)
     }
 }
+

@@ -46,6 +46,28 @@ func machineList() throws -> (Int32, String){
 }
 
 func machineInit(mach: NewMachineInit) throws{
-    try shell(arguments: ["podman","machine", "init", "--cpus", String(mach.cpus), "--memory", String(mach.memory), "--disk-size", String(mach.disksize), "--ignition-path", mach.ignitionPath, "--image-path", mach.imagePath, mach.name])
+    print("here!")
+    var args = ["podman","machine", "init", "--cpus", String(mach.cpus), "--memory", String(mach.memory), "--disk-size", String(mach.disksize)]
+    
+    args.append("--ignition-path")
+    if mach.useFcos{
+        args.append(mach.fcosStream)
+    } else {
+        args.append(mach.imagePath)
+    }
+    
+
+    if !mach.defaultIgn && mach.ignitionPath != ""{
+        args.append("--image-path")
+        args.append(mach.ignitionPath)
+    }
+    args.append(mach.name)
+    
+    do{
+        try shell(arguments: args)
+    }
+    catch{
+        print("elelle")
+    }
 }
 

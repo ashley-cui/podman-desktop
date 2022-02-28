@@ -12,9 +12,7 @@ struct MachineInitView: View {
     @EnvironmentObject var allMachines: AllMachines
     @ObservedObject var newMachine = NewMachineInit()
     var streams = ["stable", "testing", "next"]
-    @State private var vmImg = "fcos"
-    @State var customVM = false
-    @State var customIgn = false
+    @State private var focsStream = "next"
     @State private var ignFile = ""
     @State var imgFile = ""
 
@@ -54,78 +52,60 @@ struct MachineInitView: View {
         }
         Spacer()
         VStack{
-            HStack{
-                Text("Machine Name")
-                    .frame(width:100)
-                TextField(
-                    "VM Name",
-                    text: $newMachine.name
-                )
+            VStack{
+                HStack(alignment: .firstTextBaseline){
+                    Text("Machine Name")
+                        .frame(width:100)
+                    VStack{
+                        TextField(
+                            "VM Name",
+                            text: $newMachine.name
+                        )
+                        if newMachine.nameErr{
+                            HStack{
+                            Text("Machine with name already exists")
+                                    .foregroundColor(.red)
+                            Spacer()
+                        }
+                        }
+                    }
+                }
+//                if newMachine.nameErr{
             }
             
             HStack(alignment: .firstTextBaseline){
-                Text("VM OS")
-                    .frame(width:100)
-
-                    Picker("", selection: $vmImg) { // <2>
-                        HStack{
-                            Text("Fedora CoreOS") // <3>
-                            Picker("",selection: $newMachine.imagePath) {
-                                               ForEach(streams, id: \.self) {
-                                                   Text($0)
-                                               }
-                                           }
-                            .disabled(vmImg != "fcos")
-                                           .pickerStyle(SegmentedPickerStyle())
-                        }.tag("fcos")
-                        
-                        HStack{
-                            Button("Custom Image"){
-                                let panel = NSOpenPanel()
-                                panel.allowsMultipleSelection = false
-                                panel.canChooseDirectories = false
-                                if panel.runModal() == .OK {
-                                   self.imgFile = panel.url?.path ?? "select"
-                                }
-                            }
-                            .disabled(vmImg != "custom")
-                            Text(imgFile)
-                                .frame(width: 250, height: 10)
-                                .truncationMode(.head)
-                        }.tag("custom")
-                    }
-                    .pickerStyle(RadioGroupPickerStyle())
-            }
-            
-            HStack{
                 Text("CPUs")
                     .frame(width:100)
-                TextField(
-                    "CPUs",
-                    value: $newMachine.cpus,
-                    format: .number
-                )
-                    .frame(width: 25)
-                Stepper("",value: $newMachine.cpus)
-                Spacer()
-            }
-            HStack{
-                Text("RAM")
-                    .frame(width:100)
-                TextField(
-                    "Memory",
-                    value: $newMachine.memory,
-                    format: .number
-                )
-                    .frame(width: 65)
-                    
-                Text("MB")
-                Slider.ln(value: memoryToInt, in: 1 ... 65536)
+                    HStack{
+                        TextField(
+                            "CPUs",
+                            value: $newMachine.cpus,
+                            format: .number
+                        )
+                            .frame(width: 25)
+                        Stepper("",value: $newMachine.cpus)
+                        Spacer()
+                    }
             }
             
-            HStack{
+            HStack(alignment: .firstTextBaseline){
+                Text("RAM")
+                    .frame(width:100)
+                        TextField(
+                            "Memory",
+                            value: $newMachine.memory,
+                            format: .number
+                        )
+                            .frame(width: 65)
+                            
+                        Text("MB")
+                        Slider.ln(value: memoryToInt, in: 1 ... 65536)
+            }
+            
+            HStack(alignment: .firstTextBaseline){
                 Text("Disk size")
                     .frame(width:100)
+            
                 TextField(
                     "Disk size",
                     value: $newMachine.disksize,
@@ -134,44 +114,102 @@ struct MachineInitView: View {
                     .frame(width: 65)
                 Text("GB")
                 Slider.ln(value: diskToInt, in: 16 ... 2048)
+
             }
             
-            HStack{
-                Text("Ignition Path")
+            HStack(alignment: .firstTextBaseline){
+                Text("VM OS")
                     .frame(width:100)
-                    Picker("", selection: $customIgn) { // <2>
-                            Text("Generate Default") // <3>
-                                .tag(false)
+                VStack{
+                    Picker("", selection: $newMachine.useFcos) { // <2>
                         HStack{
-                            Button("Upload Custom Ignition"){
+                            Text("Fedora CoreOS") // <3>
+                            Picker("",selection: $newMachine.fcosStream) {
+                                               ForEach(streams, id: \.self) {
+                                                   Text($0)
+                                               }
+                                           }
+                            .disabled(!newMachine.useFcos)
+                                           .pickerStyle(SegmentedPickerStyle())
+                        }.tag(true)
+
+                        HStack{
+                            Button("Upload Custom Image"){
                                 let panel = NSOpenPanel()
                                 panel.allowsMultipleSelection = false
                                 panel.canChooseDirectories = false
                                 if panel.runModal() == .OK {
-                                   self.ignFile = panel.url?.path ?? "select"
+                                   self.imgFile = panel.url?.path ?? ""
+                                    newMachine.imagePath=self.imgFile
                                 }
                             }
-                            .disabled(!customIgn)
-                            Text(ignFile)
-                                .frame(width: 200, height: 10)
+                            .disabled(newMachine.useFcos)
+                            Text(imgFile)
+                                .frame(width: 250, height: 10)
                                 .truncationMode(.head)
-                        }.tag(true)
+                        }.tag(false)
                     }
                     .pickerStyle(RadioGroupPickerStyle())
+                    if newMachine.imageErr{
+                        HStack{
+                            Text("Invalid image path")
+                                .foregroundColor(.red)
+                            Spacer()
+                        }
+                    }
+                }
+
+            }
+            
+            HStack(alignment: .firstTextBaseline){
+                Text("Ignition Path")
+                    .frame(width:100)
+                VStack{
+                    Picker("", selection: $newMachine.defaultIgn) { // <2>
+                                Text("Generate Default") // <3>
+                                    .tag(true)
+                            HStack{
+                                Button("Upload Custom Ignition"){
+                                    let panel = NSOpenPanel()
+                                    panel.allowsMultipleSelection = false
+                                    panel.canChooseDirectories = false
+                                    if panel.runModal() == .OK {
+                                       self.ignFile = panel.url?.path ?? ""
+                                    }
+                                }
+                                .disabled(newMachine.defaultIgn)
+                                Text(ignFile)
+                                    .frame(width: 200, height: 10)
+                                    .truncationMode(.head)
+                                    .foregroundColor(newMachine.defaultIgn ? .gray : .black)
+                            }.tag(false)
+                        }
+                        .pickerStyle(RadioGroupPickerStyle())
+                    if newMachine.ignitionErr{
+                        HStack{
+                            Text("Invalid ignition path")
+                                .foregroundColor(.red)
+                            Spacer()
+                        }
+                    }
+                }
             }
             HStack{
                 Button("Cancel"){
                     viewRouter.currentPage = .machineSelect
                 }
-                Button("Submit") {
+                Button("Create") {
+                    if newMachine.validate(existing: allMachines.lst){
                                // TODO: need to validate data, make sure no fields are emptyhere
-                    do{
-                        try newMachine.create()
-                        allMachines.reloadAll()
-                    } catch {
-                        print("error") // TODO: plumb custom errors
+                        do{
+                            try newMachine.create()
+                            allMachines.reloadAll()
+                        } catch {
+                            print("error") // TODO: plumb custom errors
+                        }
+                        viewRouter.currentPage = .machineSelect
                     }
-                    viewRouter.currentPage = .machineSelect
+                    
                 }
             }
             .padding(40)

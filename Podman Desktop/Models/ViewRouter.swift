@@ -10,11 +10,13 @@ import Foundation
 
 class ViewRouter: ObservableObject {
     
-    @Published var currentPage: Page = .land
+    @Published var currentPage: Page = .noPodman
+    @Published var statefulError: Error? = nil
     
 }
 
 enum Page {
+    case noPodman
     case land
     case settings
     case machineSelect

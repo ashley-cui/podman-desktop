@@ -30,11 +30,24 @@ struct MachineControls: View{
     @EnvironmentObject var viewRouter: ViewRouter
     @EnvironmentObject var allMachines: AllMachines
     @State var starting: Bool = false
+    @State var isPopover = false
+    @State var errorImgName = "exclamationmark.triangle"
     var body: some View{
 
 
         HStack{
             Spacer()
+            if allMachines.activeMachine == nil {
+            Button(action: { self.isPopover.toggle() }) {
+                Image(systemName: "exclamationmark.triangle")
+                    .resizable()
+                    .scaledToFit()
+                    .foregroundColor(.yellow)
+                    .frame(width: 20, height: 20)
+            }.popover(isPresented: self.$isPopover, arrowEdge: .bottom) {
+                     DefaultConnectionView()
+            }.buttonStyle(PlainButtonStyle())
+            }
             Text("Podman is:")
                 .foregroundColor(.gray)
             if starting{
@@ -92,6 +105,19 @@ struct MachineControls: View{
 
         }
         .buttonStyle(PlainButtonStyle())
+    }
+}
+
+struct DefaultConnectionView: View {
+    var body: some View {
+        VStack {
+            Text("Running machine is not default Podman connection")
+            .padding()
+            .multilineTextAlignment(.center)
+            .frame(width: 200, alignment: .center)
+            Button("Learn More") {
+            }
+        }.padding()
     }
 }
 

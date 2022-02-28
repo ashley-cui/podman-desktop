@@ -22,7 +22,8 @@ struct MachineSelectView: View {
                         Text(self.allMachines.lst[index].name)
                     }
                 }
-                Text(allMachines.lst[machineIndex].name)
+                .frame(width: 500)
+                .padding(EdgeInsets(top: 50, leading: 0, bottom: 0, trailing: 0))
             }
             HStack{
                 Button("Set Machine"){
@@ -33,6 +34,7 @@ struct MachineSelectView: View {
             viewRouter.currentPage = .settings
         }
             }
+            .padding()
             Button("Create new VM"){
                 viewRouter.currentPage = .machineInit
             }

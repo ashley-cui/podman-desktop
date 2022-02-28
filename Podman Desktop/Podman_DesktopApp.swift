@@ -6,12 +6,22 @@
 //
 
 import SwiftUI
-
+import Foundation
 @main
 struct Podman_DesktopApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     init() {
+//        var filePath = "/Users/acui/go/src/github.com/containers/podman/bin/darwin"
+//        let fileManager = FileManager.default
+//        // Check if file exists
+//        if fileManager.fileExists(atPath: filePath) {
+//            print("File exists")
+//        } else {
+//            print("File does not exist")
+//        }
     }
+    var allMachines = AllMachines()
+    
         
     var body: some Scene {
         Settings {
@@ -20,6 +30,7 @@ struct Podman_DesktopApp: App {
         WindowGroup("Viewer") { // other scene
 //                    TestView()
             ContentView()
+                .environmentObject(allMachines)
 //            SettingsView()
                 }
         .windowStyle(HiddenTitleBarWindowStyle())
