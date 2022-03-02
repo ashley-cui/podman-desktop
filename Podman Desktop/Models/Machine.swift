@@ -119,6 +119,7 @@ class AllMachines: ObservableObject{
     }
 
     func reloadAll(){
+        print("reloading..")
         loadLst()
         loadActiveMachine()
         checkDefaultConnection()
@@ -192,6 +193,21 @@ class AllMachines: ObservableObject{
         let output = try shell(arguments: ["podman","machine", "start", activeMachine!.name])
         reloadAll()
         return output.0
+    }
+    
+    func startActiveAsync() async throws -> Int32{
+        reloadAll()
+        print("here")
+        DispatchQueue.global(qos: .utility).async{
+            do{
+                let output = try shell(arguments: ["podman","machine", "start", self.activeMachine!.name])
+            }
+            catch{
+                print("sdfasafd")
+            }
+        }
+        reloadAll()
+        return 0
     }
     
     func stopActive() async throws -> Int32{

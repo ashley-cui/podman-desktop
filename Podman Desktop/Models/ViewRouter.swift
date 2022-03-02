@@ -10,7 +10,7 @@ import Foundation
 
 class ViewRouter: ObservableObject {
     
-    @Published var currentPage: Page = .noPodman
+    @Published var currentPage: Page = .land
     @Published var statefulError: Error? = nil
     
 }

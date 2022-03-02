@@ -38,6 +38,7 @@ func shell(arguments: [String]) throws ->  (Int32, String){
     process.waitUntilExit()
     let status = process.terminationStatus
     // remove the trailing new-line char
+    print(arguments)
     return (status, str)
 }
 

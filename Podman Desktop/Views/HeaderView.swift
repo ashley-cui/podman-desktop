@@ -62,8 +62,9 @@ struct MachineControls: View{
                 allMachines.reloadAll()
                 if !allMachines.running{
                     Task{
-                        do {starting = true
-                            var exitcode = try await allMachines.startActive()
+                        starting = true
+                        do {
+                            var exitcode = try await allMachines.startActiveAsync()
                             allMachines.reloadAll()
                             starting = false
                         }
